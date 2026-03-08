@@ -1,0 +1,84 @@
+{
+  "name": "AI Lead Generation & CRM",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "list",
+        "returnAll": false,
+        "options": {
+          "maxResults": 10
+        }
+      },
+      "id": "webhook-trigger",
+      "name": "New Form Submit",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是一个销售分析专家。请分析以下潜在客户信息，评估购买意向并打分(1-10)。"
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.body }}"
+            }
+          ]
+        }
+      },
+      "id": "chatgpt",
+      "name": "Score Lead",
+      "type": "n8n-nodes-base.chatGPT",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "name": "={{ $json.name }}",
+        "fields": {
+          "fields": {
+            "name": "={{ $json.name }}",
+            "email": "={{ $json.email }}",
+            "phone": "={{ $json.phone }}",
+            "score": "={{ $json.score }}",
+            "status": "={{ $json.status }}"
+          }
+        }
+      },
+      "id": "hubspot",
+      "name": "Add to CRM",
+      "type": "n8n-nodes-base.hubspot",
+      "typeVersion": 3,
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "to": "={{ $json.email }}",
+        "subject": "Thank you for your interest!",
+        "body": "={{ $json.emailTemplate }}"
+      },
+      "id": "gmail",
+      "name": "Send Follow-up",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 3,
+      "position": [850, 300]
+    }
+  ],
+  "connections": {
+    "New Form Submit": {
+      "main": [[{"node": "Score Lead", "type": "main", "index": 0}]]
+    },
+    "Score Lead": {
+      "main": [[{"node": "Add to CRM", "type": "main", "index": 0}]]
+    },
+    "Add to CRM": {
+      "main": [[{"node": "Send Follow-up", "type": "main", "index": 0}]]
+    }
+  }
+}
