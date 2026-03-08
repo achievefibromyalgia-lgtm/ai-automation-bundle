@@ -1,0 +1,61 @@
+{
+  "name": "AI Content Repurposer",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://example.com/blog/feed.xml",
+        "options": {}
+      },
+      "id": "rss",
+      "name": "Watch Blog RSS",
+      "type": "n8n-nodes-base.rssRead",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是一个内容营销专家。请把以下博客文章改写成：1) Twitter thread 2) LinkedIn post 3) Facebook post 4) Newsletter summary"
+            },
+            {
+              "role": "user",
+              "content": "Title: {{ $json.title }}\n\nContent: {{ $json.contentSnippet }}"
+            }
+          ]
+        }
+      },
+      "id": "chatgpt",
+      "name": "Repurpose Content",
+      "type": "n8n-nodes-base.chatGPT",
+      "typeVersion": 1,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "operation": "create",
+        "name": "Save to Notion",
+        "properties": {
+          "title": "{{ $json.title }}",
+          "content": "{{ $json.content }}"
+        }
+      },
+      "id": "notion",
+      "name": "Save to Notion",
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 1,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "Watch Blog RSS": {
+      "main": [[{"node": "Repurpose Content", "type": "main", "index": 0}]]
+    },
+    "Repurpose Content": {
+      "main": [[{"node": "Save to Notion", "type": "main", "index": 0}]]
+    }
+  }
+}
