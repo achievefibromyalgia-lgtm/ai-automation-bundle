@@ -1,0 +1,63 @@
+{
+  "name": "AI Email Responder",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [{"field": "minutes", "minutesInterval": 5}]
+        }
+      },
+      "id": "schedule-trigger",
+      "name": "Check Email",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [250, 300]
+    },
+    {
+      "parameters": {
+        "operation": "list",
+        "folderId": {
+          "__rl": true,
+          "value": "INBOX"
+        },
+        "returnAll": true
+      },
+      "id": "gmail-node",
+      "name": "Get Unread Emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 3,
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "model": "gpt-4",
+        "messages": {
+          "messages": [
+            {
+              "role": "system",
+              "content": "你是一个专业的客户支持助手。请用友好、专业的语气回复客户邮件。"
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.snippet }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "chatgpt-node",
+      "name": "Generate Response",
+      "type": "n8n-nodes-base.chatGPT",
+      "typeVersion": 1,
+      "position": [650, 300]
+    }
+  ],
+  "connections": {
+    "Check Email": {
+      "main": [[{"node": "Get Unread Emails", "type": "main", "index": 0}]]
+    },
+    "Get Unread Emails": {
+      "main": [[{"node": "Generate Response", "type": "main", "index": 0}]]
+    }
+  }
+}
